@@ -23,3 +23,12 @@ problem. We’re looking to see your skills in all three tiers so the solution c
 to show our teams your abilities across the board.
 
 Requirements will be given separately.
+
+
+# Notes
+
+- I have tried to cover as much as I can within the time scope.
+- I have added some comments about how things can be done better.
+- I didn't use Task await at repositiores and services since I was focused on finishing the main requirements.
+- I didn't cover all test cases for PaycheckCalculationService due to the time limit.
+- I have added a folder for Unit tests just to get a sense how I can test the PaycheckCalculationService.
