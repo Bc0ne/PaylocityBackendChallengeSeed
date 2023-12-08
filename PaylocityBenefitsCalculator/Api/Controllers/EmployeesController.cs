@@ -1,7 +1,9 @@
-﻿using Api.Dtos.Dependent;
+﻿using Api.Abstrations;
+using Api.Dtos.Dependent;
 using Api.Dtos.Employee;
 using Api.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Api.Controllers;
@@ -10,90 +12,90 @@ namespace Api.Controllers;
 [Route("api/v1/[controller]")]
 public class EmployeesController : ControllerBase
 {
+    private readonly IEmployeeService _employeeService;
+
+    public EmployeesController(IEmployeeService employeeService)
+    {
+        _employeeService = employeeService;
+    }
+
+    [SwaggerOperation(Summary = "Get all employees")]
+    [HttpGet]
+    public async Task<ActionResult<ApiResponse<List<GetEmployeeDto>>>> GetAll()
+    {
+        List<Employee> employees = _employeeService.GetAllEmployees();
+
+        // Mapping can be improved using AutoMapper
+        List<GetEmployeeDto> employeeDtos = employees.Select(emp => new GetEmployeeDto
+        {
+            Id = emp.Id,
+            FirstName = emp.FirstName,
+            LastName = emp.LastName,
+            DateOfBirth = emp.DateOfBirth,
+            Salary = emp.Salary,
+            Dependents = emp.Dependents.Select(dep => new GetDependentDto
+            {
+                Id = dep.Id,
+                FirstName = dep.FirstName,
+                LastName = dep.LastName,
+                DateOfBirth = dep.DateOfBirth,
+                Relationship = dep.Relationship
+            }).ToList()
+        }).ToList();
+
+        var result = new ApiResponse<List<GetEmployeeDto>>
+        {
+            Data = employeeDtos,
+            Success = true
+        };
+
+        return Ok(result);
+    }
+
     [SwaggerOperation(Summary = "Get employee by id")]
     [HttpGet("{id}")]
     public async Task<ActionResult<ApiResponse<GetEmployeeDto>>> Get(int id)
     {
-        throw new NotImplementedException();
-    }
+        ApiResponse<GetEmployeeDto> result;
 
-    [SwaggerOperation(Summary = "Get all employees")]
-    [HttpGet("")]
-    public async Task<ActionResult<ApiResponse<List<GetEmployeeDto>>>> GetAll()
-    {
-        //task: use a more realistic production approach
-        var employees = new List<GetEmployeeDto>
+        Employee employee = _employeeService.GetEmployeeById(id);
+
+        if (employee == null)
         {
-            new()
+            result = new ApiResponse<GetEmployeeDto>
             {
-                Id = 1,
-                FirstName = "LeBron",
-                LastName = "James",
-                Salary = 75420.99m,
-                DateOfBirth = new DateTime(1984, 12, 30)
-            },
-            new()
+                Success = false,
+                Error = $"Employee with Id: {id} doesn't exist!"
+            };
+
+            return NotFound(result);
+        }
+
+        // Mapping can be improved using AutoMapper
+        GetEmployeeDto employeeDto = new GetEmployeeDto()
+        {
+            Id = employee.Id,
+            FirstName = employee.FirstName,
+            LastName = employee.LastName,
+            DateOfBirth = employee.DateOfBirth,
+            Salary = employee.Salary,
+            Dependents = employee.Dependents.Select(dep => new GetDependentDto
             {
-                Id = 2,
-                FirstName = "Ja",
-                LastName = "Morant",
-                Salary = 92365.22m,
-                DateOfBirth = new DateTime(1999, 8, 10),
-                Dependents = new List<GetDependentDto>
-                {
-                    new()
-                    {
-                        Id = 1,
-                        FirstName = "Spouse",
-                        LastName = "Morant",
-                        Relationship = Relationship.Spouse,
-                        DateOfBirth = new DateTime(1998, 3, 3)
-                    },
-                    new()
-                    {
-                        Id = 2,
-                        FirstName = "Child1",
-                        LastName = "Morant",
-                        Relationship = Relationship.Child,
-                        DateOfBirth = new DateTime(2020, 6, 23)
-                    },
-                    new()
-                    {
-                        Id = 3,
-                        FirstName = "Child2",
-                        LastName = "Morant",
-                        Relationship = Relationship.Child,
-                        DateOfBirth = new DateTime(2021, 5, 18)
-                    }
-                }
-            },
-            new()
-            {
-                Id = 3,
-                FirstName = "Michael",
-                LastName = "Jordan",
-                Salary = 143211.12m,
-                DateOfBirth = new DateTime(1963, 2, 17),
-                Dependents = new List<GetDependentDto>
-                {
-                    new()
-                    {
-                        Id = 4,
-                        FirstName = "DP",
-                        LastName = "Jordan",
-                        Relationship = Relationship.DomesticPartner,
-                        DateOfBirth = new DateTime(1974, 1, 2)
-                    }
-                }
-            }
+                Id = dep.Id,
+                FirstName = dep.FirstName,
+                LastName = dep.LastName,
+                DateOfBirth = dep.DateOfBirth,
+                Relationship = dep.Relationship
+            }).ToList()
         };
 
-        var result = new ApiResponse<List<GetEmployeeDto>>
+        result = new ApiResponse<GetEmployeeDto>
         {
-            Data = employees,
+            Data = employeeDto,
             Success = true
         };
 
-        return result;
+        return Ok(result);
     }
+
 }

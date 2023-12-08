@@ -1,10 +1,16 @@
+using Api.Abstrations;
+using Api.Repositories;
+using Api.Services;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
+builder.Services.AddSingleton<IEmployeeRepository, EmployeeRepository>();
+builder.Services.AddSingleton<IEmployeeService, EmployeeService>();
+builder.Services.AddSingleton<IPaycheckCalculationService, PaycheckCalculationService>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
